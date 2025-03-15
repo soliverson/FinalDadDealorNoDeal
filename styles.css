@@ -28,7 +28,6 @@ h1 {
   text-shadow: 0 0 10px gold, 0 0 1px goldenrod;
 }
 
-
 h1::before {
   top: -10px;
   left: 20%;
@@ -88,7 +87,6 @@ h1::after {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
   font-size: 1.1em;
   color: #000;
   user-select: none;
@@ -112,7 +110,6 @@ h1::after {
   width: 100%;
   height: auto;
   border-radius: 5px;
- 
 }
 
 /* Briefcase number styling */
@@ -120,10 +117,10 @@ h1::after {
   text-align: center;
   font-weight: bold;
   margin-top: 5px;
-  padding: 4px 8px;       /* Adds vertical and horizontal padding */
-  background: gold;  /* Optional: light background for contrast */
-  border-radius: 4px;     /* Rounds the corners a bit */
-  box-sizing: border-box; /* Ensures padding is included in the element's size */
+  padding: 4px 8px;
+  background: gold;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
 /* Styling for the blown-up image in the center */
@@ -137,25 +134,12 @@ h1::after {
   margin: 0 auto;
 }
 
-/* Animation for the center open effect with a 19s duration:
-   The image blows up in ~10% (~1.9s), holds for 15 seconds, then shrinks back down. */
+/* Animation for the center open effect */
 @keyframes centerExpand {
-  0% {
-    transform: translate(-50%, -50%) scale(1) rotateY(0deg);
-    opacity: 1;
-  }
-  10% {
-    transform: translate(-50%, -50%) scale(1.5) rotateY(-90deg);
-    opacity: 1;
-  }
-  90% {
-    transform: translate(-50%, -50%) scale(1.5) rotateY(-90deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1) rotateY(-90deg);
-    opacity: 0;
-  }
+  0% { transform: translate(-50%, -50%) scale(1) rotateY(0deg); opacity: 1; }
+  10% { transform: translate(-50%, -50%) scale(1.5) rotateY(-90deg); opacity: 1; }
+  90% { transform: translate(-50%, -50%) scale(1.5) rotateY(-90deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotateY(-90deg); opacity: 0; }
 }
 
 .center-open {
@@ -258,6 +242,36 @@ button:hover {
   100% { transform: scale(1); }
 }
 
+/* Specific styling for the No Deal (decline) button */
+button.decline {
+  background: linear-gradient(45deg, #ff4c4c, #d10000);
+  color: #fff;
+  border: 2px solid #a30000;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+button.decline:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Specific styling for the Deal button */
+button.deal {
+  background: linear-gradient(45deg, #4caf50, #2e7d32);
+  color: #fff;
+  border: 2px solid #1b5e20;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+button.deal:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+}
+
 /* Fireworks Styles */
 #fireworksContainer {
   position: fixed;
@@ -280,14 +294,8 @@ button:hover {
 }
 
 @keyframes explode {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(5);
-    opacity: 0;
-  }
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(5); opacity: 0; }
 }
 
 /* Responsive Styles for Smaller Screens */
@@ -311,6 +319,7 @@ button:hover {
     font-size: 2em;
   }
 }
+
 /* Birthday Photo Section Styling */
 #birthdayPhoto {
   text-align: center;
@@ -318,11 +327,10 @@ button:hover {
 }
 
 #birthdayPhoto img {
-  width: 300px;              /* Adjust width as needed */
-  max-width: 90vw;           /* Responsive maximum width */
-  border: 4px solid gold;    /* Gold border */
-  box-shadow: 0 0 20px gold;  /* Gold shadow */
+  width: 300px;
+  max-width: 90vw;
+  border: 4px solid gold;
+  box-shadow: 0 0 20px gold;
   border-radius: 10px;
   display: inline-block;
 }
-

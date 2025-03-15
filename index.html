@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Dad's 75th - Deal or No Deal Game</title>
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -76,8 +77,8 @@
     });
     
     // ----- Game State Variables -----
-    let chosenBox = null;           // Personal box (contents hidden until final reveal)
-    let openedStatus = {};          // Tracks which boxes have been opened
+    let chosenBox = null;           // Player's personal box (content hidden until final reveal)
+    let openedStatus = {};          // Tracks which boxes have been opened (they remain visible)
     let valuesRemaining = prizes.slice();
     let currentRound = 0;
     const rounds = [4, 3, 3, 2, 2, 1, 1, 1, 1];  // Number of briefcases to open per round
@@ -90,7 +91,7 @@
       const container = document.getElementById('briefcasesContainer');
       container.innerHTML = "";
       boxes.forEach(box => {
-        // Always render all briefcases; opened boxes will display their prize.
+        // Always render all briefcases; opened boxes display their prize.
         const briefcase = document.createElement("div");
         briefcase.className = "briefcase";
         briefcase.id = "briefcase-" + box;
@@ -114,7 +115,7 @@
         };
         container.appendChild(briefcase);
       });
-      // Check final swap condition: if only one unopened box remains (besides personal box), trigger final swap.
+      // Final swap trigger: if only one unopened briefcase remains (besides the personal box), trigger final swap.
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
       if (unopened.length === 1) {
         setTimeout(() => { finalSwap(); }, 500);
@@ -218,8 +219,8 @@
       offerActive = true;
       document.getElementById("offerContainer").innerHTML = `
         <p class="message">Final decision: Do you want to keep your personal box or swap it with the last remaining briefcase?</p>
-        <button onclick="keepBox()">Keep My Box</button>
-        <button onclick="swapBox()">Swap Box</button>
+        <button class="deal" onclick="keepBox()">Keep My Box</button>
+        <button class="decline" onclick="swapBox()">Swap Box</button>
       `;
     }
     
@@ -258,8 +259,8 @@
         offerContainer.innerHTML = `
           <p class="message">The banker offers you: $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           <p class="message">Deal or No Deal?</p>
-          <button onclick="acceptDeal(${offer})">Deal</button>
-          <button onclick="declineDeal()">No Deal</button>
+          <button class="deal" onclick="acceptDeal(${offer})">Deal</button>
+          <button class="decline" onclick="declineDeal()">No Deal</button>
         `;
       }, 5000);
     }
