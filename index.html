@@ -17,16 +17,15 @@
     <img src="images/dad75.jpg" alt="Dad's 75th Birthday">
   </div>
   
-  <!-- Grid of briefcases -->
+  <!-- Grid of briefcases (all boxes remain visible) -->
   <div id="briefcasesContainer"></div>
   
   <div class="container" id="gameContainer">
     <!-- Main game area -->
     <div id="gameArea">
       <div id="roundIndicator">Round: 1</div>
-      <!-- Container for bank offer (populated when an offer is made) -->
+      <!-- Dedicated container for banker's offer / final decision -->
       <div id="offerContainer"></div>
-      <!-- Game message remains separate -->
       <p class="message" id="gameMessage">
         Click a briefcase to choose your personal box.
       </p>
@@ -40,12 +39,17 @@
     </div>
   </div>
   
-  <!-- Fireworks container (if needed) -->
+  <!-- Fireworks container -->
   <div id="fireworksContainer"></div>
   
-  <!-- Audio elements for sound effects -->
+  <!-- Audio elements -->
   <audio id="clickSound" src="click.mp3" preload="auto"></audio>
   <audio id="offerSound" src="offer.mp3" preload="auto"></audio>
+  <audio id="declineSound" src="decline.mp3" preload="auto"></audio>
+  <!-- Background music -->
+  <audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
+  <!-- Applause sound -->
+  <audio id="applause" src="applause.mp3" preload="auto"></audio>
   
   <script>
     // ----- Data Setup -----
@@ -64,7 +68,6 @@
     });
     
     // ----- Random Image Assignment -----
-    // Images stored in "images" folder named "1.jpg" to "18.jpg"
     const images = Array.from({ length: 18 }, (_, i) => `images/${i + 1}.jpg`);
     shuffle(images);
     const boxImages = {};
@@ -73,8 +76,8 @@
     });
     
     // ----- Game State Variables -----
-    let chosenBox = null;           // Player's personal box (contents remain hidden until final reveal)
-    let openedStatus = {};          // Track which boxes have been opened (except personal)
+    let chosenBox = null;           // Personal box (contents hidden until final reveal)
+    let openedStatus = {};          // Tracks which boxes have been opened
     let valuesRemaining = prizes.slice();
     let currentRound = 0;
     const rounds = [4, 3, 3, 2, 2, 1, 1, 1, 1];  // Number of briefcases to open per round
@@ -87,21 +90,19 @@
       const container = document.getElementById('briefcasesContainer');
       container.innerHTML = "";
       boxes.forEach(box => {
+        // Always render all briefcases; opened boxes will display their prize.
         const briefcase = document.createElement("div");
         briefcase.className = "briefcase";
         briefcase.id = "briefcase-" + box;
         if (box === chosenBox) {
-          // Personal box: highlighted (gold overlay) but still closed.
           briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
                                   <div class="briefcase-number">${box}</div>`;
           briefcase.classList.add("personal");
         } else if (openedStatus[box]) {
-          // Opened box: show prize amount.
           briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
                                   <div class="briefcase-number">$${boxValues[box].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
           briefcase.classList.add("opened");
         } else {
-          // Unopened box.
           briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
                                   <div class="briefcase-number">${box}</div>`;
         }
@@ -113,6 +114,11 @@
         };
         container.appendChild(briefcase);
       });
+      // Check final swap condition: if only one unopened box remains (besides personal box), trigger final swap.
+      const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
+      if (unopened.length === 1) {
+        setTimeout(() => { finalSwap(); }, 500);
+      }
     }
     
     function updatePrizeBoard() {
@@ -144,6 +150,16 @@
     
     function updateRoundIndicator() {
       document.getElementById("roundIndicator").textContent = "Round: " + (currentRound + 1);
+    }
+    
+    function updateGameArea(htmlContent) {
+      const gameArea = document.getElementById('gameArea');
+      gameArea.innerHTML = htmlContent;
+      // Re-add an empty offer container so that offerDeal() can update it later.
+      const offerDiv = document.createElement("div");
+      offerDiv.id = "offerContainer";
+      gameArea.insertBefore(offerDiv, gameArea.children[1]);
+      updateSidePanels();
     }
     
     // ----- Game Functions -----
@@ -189,20 +205,22 @@
       
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
       if (unopened.length === 1) {
-        setTimeout(() => { finalSwap(); }, 1000);
+        setTimeout(() => { finalSwap(); }, 500);
+        return;
       }
       
-      // Blown-up clone animation lasts 19 seconds (approx 1.9s to blow up, 15s hold, 1.9s shrink)
+      // Blown-up clone animation lasts 19 seconds.
       setTimeout(() => { clone.remove(); }, 19000);
     }
     
     function finalSwap() {
+      // Final decision displayed in the offer container.
       offerActive = true;
-      updateGameArea(`
-        <p class="message">Only one briefcase remains. Do you want to keep your personal box or swap it with the last briefcase?</p>
+      document.getElementById("offerContainer").innerHTML = `
+        <p class="message">Final decision: Do you want to keep your personal box or swap it with the last remaining briefcase?</p>
         <button onclick="keepBox()">Keep My Box</button>
         <button onclick="swapBox()">Swap Box</button>
-      `, true);
+      `;
     }
     
     function keepBox() {
@@ -210,6 +228,8 @@
         <p class="message">You kept your personal box (#${chosenBox}). It contains: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <button onclick="playAgain()">Play Again</button>
       `);
+      playSound('applause');
+      launchFireworks();
     }
     
     function swapBox() {
@@ -220,6 +240,8 @@
         <p class="message">You swapped your box. Your new box (#${chosenBox}) contains: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <button onclick="playAgain()">Play Again</button>
       `);
+      playSound('applause');
+      launchFireworks();
     }
     
     function getBankersOffer(values) {
@@ -230,13 +252,16 @@
     function offerDeal() {
       const offer = getBankersOffer(valuesRemaining);
       offersHistory.push(offer);
-      // Update only the offer container (preserving the gameMessage)
-      document.getElementById("offerContainer").innerHTML = `
-        <p class="message">The banker offers you: $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        <p class="message">Deal or No Deal?</p>
-        <button onclick="acceptDeal(${offer})">Deal</button>
-        <button onclick="declineDeal()">No Deal</button>
-      `;
+      const offerContainer = document.getElementById("offerContainer");
+      offerContainer.innerHTML = `<p class="message">Incoming call from the banker...</p>`;
+      setTimeout(() => {
+        offerContainer.innerHTML = `
+          <p class="message">The banker offers you: $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p class="message">Deal or No Deal?</p>
+          <button onclick="acceptDeal(${offer})">Deal</button>
+          <button onclick="declineDeal()">No Deal</button>
+        `;
+      }, 5000);
     }
     
     function acceptDeal(offer) {
@@ -245,25 +270,23 @@
         <p class="message">Your personal box (#${chosenBox}) contained: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <button onclick="playAgain()">Play Again</button>
       `);
+      playSound('applause');
       launchFireworks();
     }
     
-    // Modified declineDeal() that uses a countdown without removing the offer container
     function declineDeal() {
-      // We keep the offer container as is, so the "No Deal" button remains clickable.
-      // We then run a countdown (2 seconds) before clearing the offer container and re-enabling briefcase selection.
-      offerActive = true; // Lock briefcase selection
+      playSound('declineSound');
+      offerActive = true;
       let countdown = 2;
-      const msgElem = document.getElementById("gameMessage");
+      const offerElem = document.getElementById("offerContainer");
       const interval = setInterval(() => {
-        msgElem.innerText = `You declined the offer. Continuing in ${countdown}...`;
+        offerElem.innerText = `Continuing in ${countdown}...`;
         countdown--;
         if (countdown < 0) {
           clearInterval(interval);
-          msgElem.innerText = "Continue opening boxes by clicking on them.";
-          // Clear the offer container
-          document.getElementById("offerContainer").innerHTML = "";
+          offerElem.innerHTML = "";
           offerActive = false;
+          document.getElementById("gameMessage").innerText = "Continue opening boxes by clicking on them.";
           renderBriefcases();
           updateSidePanels();
         }
@@ -286,6 +309,15 @@
       }, 200);
     }
     
+    function updateGameArea(htmlContent) {
+      const gameArea = document.getElementById('gameArea');
+      gameArea.innerHTML = htmlContent;
+      const offerDiv = document.createElement("div");
+      offerDiv.id = "offerContainer";
+      gameArea.insertBefore(offerDiv, gameArea.children[1]);
+      updateSidePanels();
+    }
+    
     function playAgain() {
       window.location.reload();
     }
@@ -294,7 +326,7 @@
       const sound = document.getElementById(id);
       if (sound) {
         sound.currentTime = 0;
-        sound.play();
+        sound.play().catch(err => console.log("Sound error: " + err));
       }
     }
     
@@ -304,19 +336,19 @@
       renderBriefcases();
       updateSidePanels();
       updateRoundIndicator();
-    };
-    
-    // Updated updateGameArea() that optionally preserves the offer container (for final swap, etc.)
-    function updateGameArea(htmlContent, preserveOffer) {
-      const gameArea = document.getElementById('gameArea');
-      // If preserveOffer is true, only update the gameMessage; otherwise, update entire gameArea.
-      if (preserveOffer) {
-        document.getElementById("gameMessage").innerHTML = htmlContent;
-      } else {
-        gameArea.innerHTML = htmlContent;
+      // Start background music on load (or on first click if autoplay is blocked)
+      const bgMusic = document.getElementById("bgMusic");
+      if (bgMusic) {
+        bgMusic.volume = 0.3;
+        bgMusic.play().catch(err => {
+          console.log("Background music autoplay error: " + err);
+          document.body.addEventListener('click', function startBgMusic() {
+            bgMusic.play().catch(err => console.log("Background music error on click: " + err));
+            document.body.removeEventListener('click', startBgMusic);
+          });
+        });
       }
-      updateSidePanels();
-    }
+    };
   </script>
 </body>
 </html>
