@@ -5,8 +5,36 @@
   <title>Dad's 75th - Deal or No Deal Game</title>
   <link rel="icon" href="images/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Fullscreen video styles */
+    #introVideoContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #introVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
 </head>
 <body>
+  <!-- Intro Video Container -->
+  <!--<div id="introVideoContainer">
+    <video id="introVideo" autoplay muted>
+      <source src="videos/intro.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div> -->
+
   <!-- Optional loading overlay -->
   <div id="loadingOverlay">Loading...</div>
   
@@ -46,302 +74,21 @@
   <div id="fireworksContainer"></div>
 
   <!-- Audio elements -->
-  <audio id="clickSound" src="click.mp3" preload="auto"></audio>
-  <audio id="offerSound" src="offer.mp3" preload="auto"></audio>
-  <audio id="declineSound" src="decline.mp3" preload="auto"></audio>
-  <audio id="applause" src="applause.mp3" preload="auto"></audio>
+  <audio id="clickSound" src="audio/click.mp3" preload="auto"></audio>
+  <audio id="offerSound" src="audio/offer.mp3" preload="auto"></audio>
+  <audio id="declineSound" src="audio/decline.mp3" preload="auto"></audio>
+  <audio id="applause" src="audio/applause.mp3" preload="auto"></audio>
+  <audio id="suspenseMusic" src="audio/suspense.mp3" preload="auto"></audio>
 
+  <!-- Scripts -->
+  <script defer src="scripts/data.js"></script>
+  <script defer src="scripts/render.js"></script>
+  <script defer src="scripts/game.js"></script>
+  <script defer src="scripts/effects.js"></script>
+  <script defer src="scripts/sounds.js"></script>
+  <script defer src="scripts/screen.js"></script>
+  <script defer src="scripts/intro.js"></script>
   <script defer>
-    /* Core game logic remains mostly unchanged */
-    
-    // ----- Data Setup -----
-    const prizes = [0.01, 1, 5, 10, 25, 50, 75, 100, 125, 150, 175, 200, 250, 300, 350, 400, 450, 500];
-    const boxes = Array.from({ length: 18 }, (_, i) => i + 1);
-    let boxValues = {};
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-    }
-    shuffle(prizes);
-    boxes.forEach((box, index) => {
-      boxValues[box] = prizes[index];
-    });
-    
-    // ----- Random Image Assignment -----
-    const images = Array.from({ length: 18 }, (_, i) => `images/${i + 1}.jpg`);
-    shuffle(images);
-    const boxImages = {};
-    boxes.forEach((box, index) => {
-      boxImages[box] = images[index];
-    });
-    
-    // ----- Game State Variables -----
-    let chosenBox = null;
-    let openedStatus = {};
-    let valuesRemaining = prizes.slice();
-    let currentRound = 0;
-    const rounds = [4, 3, 3, 2, 2, 1, 1, 1, 1];
-    let openedCount = 0;
-    let offersHistory = [];
-    let offerActive = false;
-    let finalSwapActive = false; // New flag to prevent further clicks once final swap is active
-    
-    // ----- Rendering Functions -----
-    function renderBriefcases() {
-      const container = document.getElementById('briefcasesContainer');
-      container.innerHTML = "";
-      boxes.forEach(box => {
-        // If final swap is active, do not add click handlers.
-        const briefcase = document.createElement("div");
-        briefcase.className = "briefcase";
-        briefcase.id = "briefcase-" + box;
-        if (box === chosenBox) {
-          briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
-                                  <div class="briefcase-number">${box}</div>`;
-          briefcase.classList.add("personal");
-        } else if (openedStatus[box]) {
-          briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
-                                  <div class="briefcase-number">$${boxValues[box].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
-          briefcase.classList.add("opened");
-        } else {
-          briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
-                                  <div class="briefcase-number">${box}</div>`;
-          // Only add click event if finalSwapActive is false.
-          if (!finalSwapActive) {
-            briefcase.onclick = function () {
-              if (offerActive) return;
-              if (openedStatus[box] || box === chosenBox) return;
-              playSound('clickSound');
-              briefcaseClicked(box);
-            };
-          }
-        }
-        container.appendChild(briefcase);
-      });
-      
-      // Check if only one unopened briefcase (besides the personal box) remains.
-      const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
-      if (unopened.length === 1 && !finalSwapActive) {
-        setTimeout(() => finalSwap(), 500);
-      }
-    }
-    
-    function updatePrizeBoard() {
-      const prizeBoard = document.getElementById('prizeBoard');
-      const sortedPrizes = [...prizes].sort((a, b) => a - b);
-      prizeBoard.innerHTML = "";
-      sortedPrizes.forEach(prize => {
-        const li = document.createElement("li");
-        li.textContent = "$" + prize.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        if (!valuesRemaining.includes(prize)) li.className = "eliminated";
-        prizeBoard.appendChild(li);
-      });
-    }
-    
-    function updateOffersHistory() {
-      const historyList = document.getElementById('offersHistory');
-      historyList.innerHTML = "";
-      offersHistory.forEach((offer, index) => {
-        const li = document.createElement("li");
-        li.textContent = `Offer ${index + 1}: $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        historyList.appendChild(li);
-      });
-    }
-    
-    function updateSidePanels() {
-      updatePrizeBoard();
-      updateOffersHistory();
-    }
-    
-    function updateRoundIndicator() {
-      document.getElementById("roundIndicator").textContent = "Round: " + (currentRound + 1);
-    }
-    
-    function updateGameArea(htmlContent) {
-      const gameArea = document.getElementById("briefcasesInfo");
-      gameArea.innerHTML = htmlContent;
-      updateSidePanels();
-    }
-    
-    // ----- Game Functions -----
-    function briefcaseClicked(box) {
-      if (!chosenBox) {
-        chosenBox = box;
-        document.getElementById("gameMessage").textContent =
-          `You have chosen box #${box} as your personal box. Now open other boxes by clicking on them.`;
-        renderBriefcases();
-      } else {
-        if (box === chosenBox) return;
-        if (openedStatus[box]) return;
-        openBriefcase(box);
-      }
-      updateSidePanels();
-      updateRoundIndicator();
-    }
-    
-    function openBriefcase(box) {
-      openedStatus[box] = true;
-      const briefcase = document.getElementById("briefcase-" + box);
-      let clone = briefcase.cloneNode(true);
-      clone.innerHTML = `<img class="center-img" src="${boxImages[box]}" alt="Image ${box}">
-                         <div class="center-amount">$${boxValues[box].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
-      clone.classList.add("center-open");
-      document.body.appendChild(clone);
-      
-      const idx = valuesRemaining.indexOf(boxValues[box]);
-      if (idx > -1) valuesRemaining.splice(idx, 1);
-      renderBriefcases();
-      
-      openedCount++;
-      if (openedCount >= rounds[currentRound]) {
-        offerActive = true;
-        playSound('offerSound');
-        setTimeout(() => {
-          offerDeal();
-          currentRound++;
-          openedCount = 0;
-          updateRoundIndicator();
-        }, 1000);
-      }
-      
-      const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
-      if (unopened.length === 1 && !finalSwapActive) {
-        setTimeout(() => finalSwap(), 500);
-        return;
-      }
-      
-      setTimeout(() => clone.remove(), 19000);
-    }
-    
-    function finalSwap() {
-      finalSwapActive = true; // Activate final swap mode to prevent further clicks
-      offerActive = true;
-      document.getElementById("offerContainer").innerHTML = `
-        <p class="message">Final decision: Do you want to keep your personal box or swap it with the last remaining briefcase?</p>
-        <button class="deal" onclick="keepBox()">Keep My Box</button>
-        <button class="decline" onclick="swapBox()">Swap Box</button>
-      `;
-    }
-    
-    function keepBox() {
-      updateGameArea(`
-        <p class="message">You kept your personal box (#${chosenBox}). It contains: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        <button onclick="playAgain()">Play Again</button>
-      `);
-      playSound('applause');
-      launchFireworks();
-    }
-    
-    function swapBox() {
-      const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
-      const swapBox = unopened[0];
-      chosenBox = swapBox;
-      updateGameArea(`
-        <p class="message">You swapped your box. Your new box (#${chosenBox}) contains: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        <button onclick="playAgain()">Play Again</button>
-      `);
-      playSound('applause');
-      launchFireworks();
-    }
-    
-    function getBankersOffer(values) {
-      const sum = values.reduce((acc, curr) => acc + curr, 0);
-      return sum / values.length;
-    }
-    
-    function offerDeal() {
-      const offer = getBankersOffer(valuesRemaining);
-      offersHistory.push(offer);
-      const offerContainer = document.getElementById("offerContainer");
-      offerContainer.innerHTML = `<p class="message">Incoming call from the banker...</p>`;
-      setTimeout(() => {
-        offerContainer.innerHTML = `
-          <p class="message">The banker offers you: $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-          <p class="message">Deal or No Deal?</p>
-          <button class="deal" onclick="acceptDeal(${offer})">Deal</button>
-          <button class="decline" onclick="declineDeal()">No Deal</button>
-        `;
-      }, 5000);
-    }
-    
-    function acceptDeal(offer) {
-      updateGameArea(`
-        <p class="message">You accepted the deal of $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}!</p>
-        <p class="message">Your personal box (#${chosenBox}) contained: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        <button onclick="playAgain()">Play Again</button>
-      `);
-      playSound('applause');
-      launchFireworks();
-    }
-    
-    function declineDeal() {
-      playSound('declineSound');
-      offerActive = true;
-      let countdown = 2;
-      const offerElem = document.getElementById("offerContainer");
-      const interval = setInterval(() => {
-        offerElem.innerText = `Continuing in ${countdown}...`;
-        countdown--;
-        if (countdown < 0) {
-          clearInterval(interval);
-          offerElem.innerHTML = "";
-          offerActive = false;
-          document.getElementById("gameMessage").textContent = "Continue opening boxes by clicking on them.";
-          renderBriefcases();
-          updateSidePanels();
-        }
-      }, 1000);
-    }
-    
-    function launchFireworks() {
-      const container = document.getElementById("fireworksContainer");
-      container.innerHTML = "";
-      const duration = 30000;
-      const endTime = Date.now() + duration;
-      const interval = setInterval(() => {
-        if (Date.now() > endTime) { clearInterval(interval); return; }
-        const firework = document.createElement("div");
-        firework.className = "firework";
-        firework.style.left = Math.random() * 100 + "vw";
-        firework.style.top = Math.random() * 100 + "vh";
-        container.appendChild(firework);
-        setTimeout(() => firework.remove(), 1500);
-      }, 200);
-    }
-    
-    function updateGameArea(htmlContent) {
-      const gameArea = document.getElementById("briefcasesInfo");
-      gameArea.innerHTML = htmlContent;
-      updateSidePanels();
-    }
-    
-    function playAgain() {
-      window.location.reload();
-    }
-    
-    function playSound(id) {
-      const sound = document.getElementById(id);
-      if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(err => console.log("Sound error: " + err));
-      }
-    }
-    
-    // ----- Full Screen Toggle -----
-    function toggleFullScreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-        });
-        document.getElementById("fullScreenBtn").textContent = "Exit Full Screen";
-      } else {
-        document.exitFullscreen();
-        document.getElementById("fullScreenBtn").textContent = "Full Screen";
-      }
-    }
-    
     window.onload = function() {
       document.getElementById("loadingOverlay").style.display = "none";
       renderBriefcases();
