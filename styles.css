@@ -1,11 +1,6 @@
 /* Import modern font */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-/* Custom cursor */
-body, button, .briefcase {
-  cursor: url('http://www.rw-designer.com/cursor-set/delta-gold'), pointer;
-}
-
 /* Base Styles */
 body {
   margin: 0;
