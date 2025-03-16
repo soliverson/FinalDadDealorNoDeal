@@ -52,8 +52,8 @@
   <audio id="applause" src="applause.mp3" preload="auto"></audio>
 
   <script defer>
-    /* Core game logic remains unchanged */
-
+    /* Core game logic remains mostly unchanged */
+    
     // ----- Data Setup -----
     const prizes = [0.01, 1, 5, 10, 25, 50, 75, 100, 125, 150, 175, 200, 250, 300, 350, 400, 450, 500];
     const boxes = Array.from({ length: 18 }, (_, i) => i + 1);
@@ -68,7 +68,7 @@
     boxes.forEach((box, index) => {
       boxValues[box] = prizes[index];
     });
-
+    
     // ----- Random Image Assignment -----
     const images = Array.from({ length: 18 }, (_, i) => `images/${i + 1}.jpg`);
     shuffle(images);
@@ -76,7 +76,7 @@
     boxes.forEach((box, index) => {
       boxImages[box] = images[index];
     });
-
+    
     // ----- Game State Variables -----
     let chosenBox = null;
     let openedStatus = {};
@@ -86,12 +86,14 @@
     let openedCount = 0;
     let offersHistory = [];
     let offerActive = false;
-
+    let finalSwapActive = false; // New flag to prevent further clicks once final swap is active
+    
     // ----- Rendering Functions -----
     function renderBriefcases() {
       const container = document.getElementById('briefcasesContainer');
       container.innerHTML = "";
       boxes.forEach(box => {
+        // If final swap is active, do not add click handlers.
         const briefcase = document.createElement("div");
         briefcase.className = "briefcase";
         briefcase.id = "briefcase-" + box;
@@ -106,21 +108,26 @@
         } else {
           briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
                                   <div class="briefcase-number">${box}</div>`;
+          // Only add click event if finalSwapActive is false.
+          if (!finalSwapActive) {
+            briefcase.onclick = function () {
+              if (offerActive) return;
+              if (openedStatus[box] || box === chosenBox) return;
+              playSound('clickSound');
+              briefcaseClicked(box);
+            };
+          }
         }
-        briefcase.onclick = function () {
-          if (offerActive) return;
-          if (openedStatus[box] || box === chosenBox) return;
-          playSound('clickSound');
-          briefcaseClicked(box);
-        };
         container.appendChild(briefcase);
       });
+      
+      // Check if only one unopened briefcase (besides the personal box) remains.
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
-      if (unopened.length === 1) {
+      if (unopened.length === 1 && !finalSwapActive) {
         setTimeout(() => finalSwap(), 500);
       }
     }
-
+    
     function updatePrizeBoard() {
       const prizeBoard = document.getElementById('prizeBoard');
       const sortedPrizes = [...prizes].sort((a, b) => a - b);
@@ -132,7 +139,7 @@
         prizeBoard.appendChild(li);
       });
     }
-
+    
     function updateOffersHistory() {
       const historyList = document.getElementById('offersHistory');
       historyList.innerHTML = "";
@@ -142,22 +149,22 @@
         historyList.appendChild(li);
       });
     }
-
+    
     function updateSidePanels() {
       updatePrizeBoard();
       updateOffersHistory();
     }
-
+    
     function updateRoundIndicator() {
       document.getElementById("roundIndicator").textContent = "Round: " + (currentRound + 1);
     }
-
+    
     function updateGameArea(htmlContent) {
       const gameArea = document.getElementById("briefcasesInfo");
       gameArea.innerHTML = htmlContent;
       updateSidePanels();
     }
-
+    
     // ----- Game Functions -----
     function briefcaseClicked(box) {
       if (!chosenBox) {
@@ -173,7 +180,7 @@
       updateSidePanels();
       updateRoundIndicator();
     }
-
+    
     function openBriefcase(box) {
       openedStatus[box] = true;
       const briefcase = document.getElementById("briefcase-" + box);
@@ -200,15 +207,16 @@
       }
       
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
-      if (unopened.length === 1) {
+      if (unopened.length === 1 && !finalSwapActive) {
         setTimeout(() => finalSwap(), 500);
         return;
       }
       
       setTimeout(() => clone.remove(), 19000);
     }
-
+    
     function finalSwap() {
+      finalSwapActive = true; // Activate final swap mode to prevent further clicks
       offerActive = true;
       document.getElementById("offerContainer").innerHTML = `
         <p class="message">Final decision: Do you want to keep your personal box or swap it with the last remaining briefcase?</p>
@@ -216,7 +224,7 @@
         <button class="decline" onclick="swapBox()">Swap Box</button>
       `;
     }
-
+    
     function keepBox() {
       updateGameArea(`
         <p class="message">You kept your personal box (#${chosenBox}). It contains: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -225,7 +233,7 @@
       playSound('applause');
       launchFireworks();
     }
-
+    
     function swapBox() {
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
       const swapBox = unopened[0];
@@ -237,12 +245,12 @@
       playSound('applause');
       launchFireworks();
     }
-
+    
     function getBankersOffer(values) {
       const sum = values.reduce((acc, curr) => acc + curr, 0);
       return sum / values.length;
     }
-
+    
     function offerDeal() {
       const offer = getBankersOffer(valuesRemaining);
       offersHistory.push(offer);
@@ -257,7 +265,7 @@
         `;
       }, 5000);
     }
-
+    
     function acceptDeal(offer) {
       updateGameArea(`
         <p class="message">You accepted the deal of $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}!</p>
@@ -267,7 +275,7 @@
       playSound('applause');
       launchFireworks();
     }
-
+    
     function declineDeal() {
       playSound('declineSound');
       offerActive = true;
@@ -286,7 +294,7 @@
         }
       }, 1000);
     }
-
+    
     function launchFireworks() {
       const container = document.getElementById("fireworksContainer");
       container.innerHTML = "";
@@ -302,17 +310,17 @@
         setTimeout(() => firework.remove(), 1500);
       }, 200);
     }
-
+    
     function updateGameArea(htmlContent) {
       const gameArea = document.getElementById("briefcasesInfo");
       gameArea.innerHTML = htmlContent;
       updateSidePanels();
     }
-
+    
     function playAgain() {
       window.location.reload();
     }
-
+    
     function playSound(id) {
       const sound = document.getElementById(id);
       if (sound) {
@@ -320,7 +328,7 @@
         sound.play().catch(err => console.log("Sound error: " + err));
       }
     }
-
+    
     // ----- Full Screen Toggle -----
     function toggleFullScreen() {
       if (!document.fullscreenElement) {
@@ -333,22 +341,12 @@
         document.getElementById("fullScreenBtn").textContent = "Full Screen";
       }
     }
-
+    
     window.onload = function() {
       document.getElementById("loadingOverlay").style.display = "none";
       renderBriefcases();
       updateSidePanels();
       updateRoundIndicator();
-      const bgMusic = document.getElementById("bgMusic");
-      if (bgMusic) {
-        bgMusic.volume = 0.3;
-        bgMusic.play().catch(err => {
-          document.body.addEventListener('click', function startBgMusic() {
-            bgMusic.play().catch(err => console.log("Background music error on click: " + err));
-            document.body.removeEventListener('click', startBgMusic);
-          });
-        });
-      }
     };
   </script>
 </body>

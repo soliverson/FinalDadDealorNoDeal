@@ -108,7 +108,7 @@ main {
   text-align: center;
 }
 
-/* Prize board: 2 columns */
+/* Prize board: display prizes in 2 columns */
 #prizeBoard {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -141,7 +141,7 @@ main {
   color: #000;
 }
 .briefcase-img {
-  width: 100%;  /* Fill cell */
+  width: 100%;  /* Fill the cell */
   display: block;
   margin: 0 auto;
   border-radius: 5px;
