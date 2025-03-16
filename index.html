@@ -11,23 +11,27 @@
   <div id="loadingOverlay">Loading...</div>
   
   <header>
-    <h1>Dad's 75th</h1>
-    <h1>Deal or No Deal</h1>
+    <div id="headerContent">
+      <img id="headerPhoto" src="images/dad75.jpg" alt="Dad's 75th Birthday" loading="lazy">
+      <div id="headerTitles">
+        <h1>Dad's 75th</h1>
+        <h1>Deal or No Deal</h1>
+      </div>
+    </div>
   </header>
-
-  <!-- Birthday Photo Section -->
-  <div id="birthdayPhoto">
-    <img src="images/dad75.jpg" alt="Dad's 75th Birthday">
-  </div>
 
   <!-- Main layout: briefcases on the left, prizes on the right -->
   <main>
-    <!-- Briefcases area (center/left) -->
     <section id="briefcasesSection">
       <div id="briefcasesContainer"></div>
+      <!-- Info area directly underneath the briefcases -->
+      <div id="briefcasesInfo">
+        <p id="roundIndicator">Round: 1</p>
+        <div id="offerContainer"></div>
+        <p class="message" id="gameMessage">Click a briefcase to choose your personal box.</p>
+      </div>
     </section>
 
-    <!-- Prizes and offers on the right -->
     <aside id="prizesSection">
       <h2>Prizes</h2>
       <ul id="prizeBoard"></ul>
@@ -36,15 +40,6 @@
     </aside>
   </main>
 
-  <!-- Bottom area: Round indicator, Offer container, Game messages -->
-  <footer id="bottomArea">
-    <div id="roundIndicator">Round: 1</div>
-    <div id="offerContainer"></div>
-    <p class="message" id="gameMessage">
-      Click a briefcase to choose your personal box.
-    </p>
-  </footer>
-
   <!-- Fireworks container -->
   <div id="fireworksContainer"></div>
 
@@ -52,15 +47,11 @@
   <audio id="clickSound" src="click.mp3" preload="auto"></audio>
   <audio id="offerSound" src="offer.mp3" preload="auto"></audio>
   <audio id="declineSound" src="decline.mp3" preload="auto"></audio>
+  <audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
   <audio id="applause" src="applause.mp3" preload="auto"></audio>
 
-  <script>
-    /*************************************************************
-     *   JavaScript: The core game logic remains the same.       *
-     *   Only the container IDs and layout are changed to match  *
-     *   the new structure with 3 rows of 6 columns on wide      *
-     *   screens.                                                *
-     *************************************************************/
+  <script defer>
+    /* Core game logic remains unchanged */
 
     // ----- Data Setup -----
     const prizes = [0.01, 1, 5, 10, 25, 50, 75, 100, 125, 150, 175, 200, 250, 300, 350, 400, 450, 500];
@@ -103,43 +94,26 @@
         const briefcase = document.createElement("div");
         briefcase.className = "briefcase";
         briefcase.id = "briefcase-" + box;
-
         if (box === chosenBox) {
-          // Personal box
-          briefcase.innerHTML = `
-            <img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
-            <div class="briefcase-number">${box}</div>
-          `;
+          briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
+                                  <div class="briefcase-number">${box}</div>`;
           briefcase.classList.add("personal");
         } else if (openedStatus[box]) {
-          // Opened box
-          briefcase.innerHTML = `
-            <img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
-            <div class="briefcase-number">
-              $${boxValues[box].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          `;
+          briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
+                                  <div class="briefcase-number">$${boxValues[box].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
           briefcase.classList.add("opened");
         } else {
-          // Unopened box
-          briefcase.innerHTML = `
-            <img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
-            <div class="briefcase-number">${box}</div>
-          `;
+          briefcase.innerHTML = `<img class="briefcase-img" src="${boxImages[box]}" alt="Image ${box}">
+                                  <div class="briefcase-number">${box}</div>`;
         }
-
-        // Click handler
-        briefcase.onclick = function() {
+        briefcase.onclick = function () {
           if (offerActive) return;
           if (openedStatus[box] || box === chosenBox) return;
           playSound('clickSound');
           briefcaseClicked(box);
         };
-
         container.appendChild(briefcase);
       });
-
-      // If only one unopened box remains (besides the chosen box), final swap
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
       if (unopened.length === 1) {
         setTimeout(() => finalSwap(), 500);
@@ -153,9 +127,7 @@
       sortedPrizes.forEach(prize => {
         const li = document.createElement("li");
         li.textContent = "$" + prize.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        if (!valuesRemaining.includes(prize)) {
-          li.className = "eliminated";
-        }
+        if (!valuesRemaining.includes(prize)) li.className = "eliminated";
         prizeBoard.appendChild(li);
       });
     }
@@ -179,6 +151,12 @@
       document.getElementById("roundIndicator").textContent = "Round: " + (currentRound + 1);
     }
 
+    function updateGameArea(htmlContent) {
+      const gameArea = document.getElementById("briefcasesInfo");
+      gameArea.innerHTML = htmlContent;
+      updateSidePanels();
+    }
+
     // ----- Game Functions -----
     function briefcaseClicked(box) {
       if (!chosenBox) {
@@ -187,6 +165,8 @@
           `You have chosen box #${box} as your personal box. Now open other boxes by clicking on them.`;
         renderBriefcases();
       } else {
+        if (box === chosenBox) return;
+        if (openedStatus[box]) return;
         openBriefcase(box);
       }
       updateSidePanels();
@@ -196,24 +176,16 @@
     function openBriefcase(box) {
       openedStatus[box] = true;
       const briefcase = document.getElementById("briefcase-" + box);
-
-      // Clone for center "blown-up" effect
       let clone = briefcase.cloneNode(true);
-      clone.innerHTML = `
-        <img class="center-img" src="${boxImages[box]}" alt="Image ${box}">
-        <div class="center-amount">
-          $${boxValues[box].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </div>
-      `;
+      clone.innerHTML = `<img class="center-img" src="${boxImages[box]}" alt="Image ${box}">
+                         <div class="center-amount">$${boxValues[box].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
       clone.classList.add("center-open");
       document.body.appendChild(clone);
-
-      // Remove prize from array
+      
       const idx = valuesRemaining.indexOf(boxValues[box]);
       if (idx > -1) valuesRemaining.splice(idx, 1);
-
       renderBriefcases();
-
+      
       openedCount++;
       if (openedCount >= rounds[currentRound]) {
         offerActive = true;
@@ -225,15 +197,13 @@
           updateRoundIndicator();
         }, 1000);
       }
-
-      // If only one unopened box remains, final swap
+      
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
       if (unopened.length === 1) {
         setTimeout(() => finalSwap(), 500);
         return;
       }
-
-      // Remove the clone after 19s
+      
       setTimeout(() => clone.remove(), 19000);
     }
 
@@ -247,13 +217,10 @@
     }
 
     function keepBox() {
-      document.getElementById("gameMessage").textContent = "";
-      document.getElementById("offerContainer").innerHTML = `
-        <p class="message">You kept your personal box (#${chosenBox}). It contains: 
-          $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </p>
+      updateGameArea(`
+        <p class="message">You kept your personal box (#${chosenBox}). It contains: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <button onclick="playAgain()">Play Again</button>
-      `;
+      `);
       playSound('applause');
       launchFireworks();
     }
@@ -262,13 +229,10 @@
       const unopened = boxes.filter(b => !openedStatus[b] && b !== chosenBox);
       const swapBox = unopened[0];
       chosenBox = swapBox;
-      document.getElementById("gameMessage").textContent = "";
-      document.getElementById("offerContainer").innerHTML = `
-        <p class="message">You swapped your box. Your new box (#${chosenBox}) contains: 
-          $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </p>
+      updateGameArea(`
+        <p class="message">You swapped your box. Your new box (#${chosenBox}) contains: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <button onclick="playAgain()">Play Again</button>
-      `;
+      `);
       playSound('applause');
       launchFireworks();
     }
@@ -285,9 +249,7 @@
       offerContainer.innerHTML = `<p class="message">Incoming call from the banker...</p>`;
       setTimeout(() => {
         offerContainer.innerHTML = `
-          <p class="message">The banker offers you: 
-            $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
+          <p class="message">The banker offers you: $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           <p class="message">Deal or No Deal?</p>
           <button class="deal" onclick="acceptDeal(${offer})">Deal</button>
           <button class="decline" onclick="declineDeal()">No Deal</button>
@@ -296,16 +258,11 @@
     }
 
     function acceptDeal(offer) {
-      document.getElementById("gameMessage").textContent = "";
-      document.getElementById("offerContainer").innerHTML = `
-        <p class="message">You accepted the deal of 
-          $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}!
-        </p>
-        <p class="message">Your personal box (#${chosenBox}) contained: 
-          $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </p>
+      updateGameArea(`
+        <p class="message">You accepted the deal of $${offer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}!</p>
+        <p class="message">Your personal box (#${chosenBox}) contained: $${boxValues[chosenBox].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <button onclick="playAgain()">Play Again</button>
-      `;
+      `);
       playSound('applause');
       launchFireworks();
     }
@@ -335,10 +292,7 @@
       const duration = 30000;
       const endTime = Date.now() + duration;
       const interval = setInterval(() => {
-        if (Date.now() > endTime) {
-          clearInterval(interval);
-          return;
-        }
+        if (Date.now() > endTime) { clearInterval(interval); return; }
         const firework = document.createElement("div");
         firework.className = "firework";
         firework.style.left = Math.random() * 100 + "vw";
@@ -346,6 +300,12 @@
         container.appendChild(firework);
         setTimeout(() => firework.remove(), 1500);
       }, 200);
+    }
+
+    function updateGameArea(htmlContent) {
+      const gameArea = document.getElementById("briefcasesInfo");
+      gameArea.innerHTML = htmlContent;
+      updateSidePanels();
     }
 
     function playAgain() {
@@ -360,18 +320,15 @@
       }
     }
 
-    // ----- Initial Rendering -----
     window.onload = function() {
       document.getElementById("loadingOverlay").style.display = "none";
       renderBriefcases();
       updateSidePanels();
       updateRoundIndicator();
-      // Start background music
       const bgMusic = document.getElementById("bgMusic");
       if (bgMusic) {
         bgMusic.volume = 0.3;
         bgMusic.play().catch(err => {
-          console.log("Background music autoplay error: " + err);
           document.body.addEventListener('click', function startBgMusic() {
             bgMusic.play().catch(err => console.log("Background music error on click: " + err));
             document.body.removeEventListener('click', startBgMusic);
