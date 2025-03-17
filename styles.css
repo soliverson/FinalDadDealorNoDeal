@@ -27,13 +27,14 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
 }
 #headerPhoto {
   width: 100px; /* Adjust as needed */
   border: 4px solid gold;
   box-shadow: 0 0 20px gold;
   border-radius: 10px;
-  margin-right: 10px;
+  margin: 5px;
 }
 #headerTitles {
   display: flex;
@@ -78,6 +79,7 @@ main {
   display: flex;
   max-width: 1300px;
   margin: 0 auto;
+  gap: 10px;
 }
 
 /* Briefcases area */
@@ -85,10 +87,13 @@ main {
   flex: 2;
   margin-right: 10px;
   text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  padding: 10px;
 }
 #briefcasesContainer {
   display: grid;
-  /* 9 columns for 18 boxes (2 rows) */
+  /* 9 columns for 18 boxes on larger screens */
   grid-template-columns: repeat(9, minmax(90px, 115px));
   gap: 4px;
   margin: 0 auto;
@@ -101,11 +106,10 @@ main {
 }
 
 /* Prizes area (right side) */
-/* Narrowed the prize area and moved the divider closer to the right side */
 #prizesSection {
-  flex: 0 0 200px;  /* Forces the section to remain about 200px wide */
+  flex: 0 0 200px;
   border-left: 2px solid #d4af37;
-  padding-left: 5px; /* Reduced padding so divider is closer */
+  padding-left: 5px;
   text-align: center;
 }
 
@@ -113,7 +117,7 @@ main {
 #prizeBoard {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1px;  /* Closer together */
+  gap: 1px;
 }
 
 /* Briefcase styling */
@@ -137,7 +141,7 @@ main {
   box-shadow: 0 0 8px rgba(255,215,0,0.6);
 }
 
-/* Chosen (personal) briefcase - updated to be more noticeable */
+/* Chosen (personal) briefcase styling */
 .briefcase.personal {
   background: linear-gradient(135deg, rgba(255,215,0,0.6), rgba(255,215,0,0.3));
   border: 4px solid #ffd700;
@@ -153,7 +157,7 @@ main {
 }
 
 .briefcase-img {
-  width: 100%;  /* Fill the cell */
+  width: 100%;
   display: block;
   margin: 0 auto;
   border-radius: 5px;
@@ -162,8 +166,8 @@ main {
   text-align: center;
   font-weight: bold;
   margin-top: 2px;
-  padding: 4px 6px;  /* Increased padding for better visibility */
-  font-size: 1.2em;  /* Bigger numbers */
+  padding: 4px 6px;
+  font-size: 1.2em;
   background: gold;
   border-radius: 4px;
   box-sizing: border-box;
@@ -173,7 +177,7 @@ main {
   text-overflow: ellipsis;
 }
 
-/* Center blown-up effect (remains large) */
+/* Center blown-up effect */
 .center-img {
   width: 250px !important;
   max-width: 90vw;
@@ -240,6 +244,10 @@ button:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 10px rgba(0,0,0,0.4);
 }
+button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
 @keyframes pulse {
   0%   { transform: scale(1); }
   50%  { transform: scale(1.05); }
@@ -296,32 +304,9 @@ button.deal:hover {
   100% { transform: scale(5); opacity: 0; }
 }
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  #briefcasesContainer {
-    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-  }
-}
-@media (max-width: 768px) {
-  main {
-    flex-direction: column;
-    align-items: center;
-  }
-  #prizesSection {
-    border-left: none;
-    margin-top: 10px;
-  }
-  #briefcasesContainer {
-    grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
-  }
-  h1 {
-    font-size: 2em;
-  }
-}
-
 /* Modal container */
 .modal {
-  display: none; /* Hidden by default */
+  display: none;
   position: fixed;
   z-index: 10000;
   left: 0;
@@ -329,9 +314,10 @@ button.deal:hover {
   width: 100vw;
   height: 100vh;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.8); /* semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.8);
   justify-content: center;
   align-items: center;
+  transition: opacity 0.3s ease;
 }
 
 /* Modal content box */
@@ -344,6 +330,17 @@ button.deal:hover {
   max-width: 500px;
   text-align: center;
   border-radius: 8px;
+  animation: modalEntrance 0.5s ease-out;
+}
+@keyframes modalEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Close button (optional) */
@@ -359,4 +356,42 @@ button.deal:hover {
   color: #fff;
   text-decoration: none;
   cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  #briefcasesContainer {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  }
+  h1 {
+    font-size: 2em;
+  }
+  #prizesSection {
+    flex: 0 0 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  main {
+    flex-direction: column;
+    align-items: center;
+  }
+  #prizesSection {
+    border-left: none;
+    margin-top: 10px;
+    width: 90%;
+    max-width: 400px;
+  }
+  #briefcasesContainer {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  }
+  h1 {
+    font-size: 1.8em;
+  }
+  #headerPhoto {
+    width: 80px;
+  }
+  #briefcasesInfo {
+    font-size: 1.2em;
+  }
 }
