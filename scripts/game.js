@@ -80,6 +80,8 @@ function keepBox() {
     <button onclick="playAgain()">Play Again</button>
   `;
   document.getElementById('offerDetails').innerHTML = resultHTML;
+  // Add extra exciting styling for the final result.
+  document.querySelector('.modal-content').classList.add('result-modal');
   playSound('applause');
   launchFireworks();
 }
@@ -98,6 +100,7 @@ function swapBox() {
     <button onclick="playAgain()">Play Again</button>
   `;
   document.getElementById('offerDetails').innerHTML = resultHTML;
+  document.querySelector('.modal-content').classList.add('result-modal');
   playSound('applause');
   launchFireworks();
 }
@@ -141,6 +144,7 @@ function acceptDeal(offer) {
     <button onclick="playAgain()">Play Again</button>
   `;
   document.getElementById('offerDetails').innerHTML = resultHTML;
+  document.querySelector('.modal-content').classList.add('result-modal');
   playSound('applause');
   launchFireworks();
 }
@@ -181,5 +185,7 @@ function showRoundModal(roundDisplay) {
   document.getElementById('offerModal').style.display = 'flex';
   setTimeout(() => {
     document.getElementById('offerModal').style.display = 'none';
+    // Remove result-modal styling so future modals look normal.
+    document.querySelector('.modal-content').classList.remove('result-modal');
   }, 3000);
 }
