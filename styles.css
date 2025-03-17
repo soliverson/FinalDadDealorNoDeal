@@ -89,7 +89,7 @@ main {
 #briefcasesContainer {
   display: grid;
   /* 9 columns for 18 boxes (2 rows) */
-  grid-template-columns: repeat(9, minmax(70px, 90px));
+  grid-template-columns: repeat(9, minmax(90px, 115px));
   gap: 4px;
   margin: 0 auto;
 }
@@ -97,22 +97,23 @@ main {
 /* Briefcases Info (round indicator, offer container, instructions) */
 #briefcasesInfo {
   margin-top: 8px;
-  font-size: 1em;
+  font-size: 1.5em;
 }
 
 /* Prizes area (right side) */
+/* Narrowed the prize area and moved the divider closer to the right side */
 #prizesSection {
-  flex: 1;
+  flex: 0 0 200px;  /* Forces the section to remain about 200px wide */
   border-left: 2px solid #d4af37;
-  padding-left: 10px;
+  padding-left: 5px; /* Reduced padding so divider is closer */
   text-align: center;
 }
 
-/* Prize board: display prizes in 2 columns */
+/* Prize board: display prizes in 2 columns with a smaller gap */
 #prizeBoard {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
+  gap: 1px;  /* Closer together */
 }
 
 /* Briefcase styling */
@@ -124,7 +125,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.8em;
+  font-size: 1.2em;
   color: #000;
   user-select: none;
   transition: transform 0.2s, background-color 0.3s, box-shadow 0.2s;
@@ -135,11 +136,22 @@ main {
   background-color: rgba(255,215,0,0.6);
   box-shadow: 0 0 8px rgba(255,215,0,0.6);
 }
+
+/* Chosen (personal) briefcase - updated to be more noticeable */
 .briefcase.personal {
   background: linear-gradient(135deg, rgba(255,215,0,0.6), rgba(255,215,0,0.3));
-  border: 2px solid #ffd700;
+  border: 4px solid #ffd700;
   color: #000;
+  transform: scale(1.1);
+  animation: pulseHighlight 2s infinite;
 }
+
+@keyframes pulseHighlight {
+  0%   { box-shadow: 0 0 10px 3px rgba(255,215,0,0.6); }
+  50%  { box-shadow: 0 0 20px 6px rgba(255,215,0,1); }
+  100% { box-shadow: 0 0 10px 3px rgba(255,215,0,0.6); }
+}
+
 .briefcase-img {
   width: 100%;  /* Fill the cell */
   display: block;
@@ -150,7 +162,8 @@ main {
   text-align: center;
   font-weight: bold;
   margin-top: 2px;
-  padding: 2px 4px;
+  padding: 4px 6px;  /* Increased padding for better visibility */
+  font-size: 1.2em;  /* Bigger numbers */
   background: gold;
   border-radius: 4px;
   box-sizing: border-box;
@@ -198,7 +211,7 @@ ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 1em;
+  font-size: 1.2em;
 }
 li {
   margin: 4px 0;
@@ -304,4 +317,46 @@ button.deal:hover {
   h1 {
     font-size: 2em;
   }
+}
+
+/* Modal container */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.8); /* semi-transparent background */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal content box */
+.modal-content {
+  background-color: #222;
+  margin: auto;
+  padding: 20px;
+  border: 2px solid #d4af37;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+/* Close button (optional) */
+.close {
+  color: #d4af37;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.close:hover,
+.close:focus {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
 }
