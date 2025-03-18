@@ -14,7 +14,7 @@ boxes.forEach((box, index) => {
 });
 
 // Random Image Assignment
-const images = Array.from({ length: 18 }, (_, i) => `images/${i + 1}.jpg`);
+const images = Array.from({ length: 18 }, (_, i) => `images/${i + 1}.webp`);
 shuffle(images);
 const boxImages = {};
 boxes.forEach((box, index) => {
