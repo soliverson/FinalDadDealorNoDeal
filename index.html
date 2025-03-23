@@ -16,7 +16,7 @@
       width: 100vw;
       height: 100vh;
       overflow: auto;
-      background-color: rgba(0, 0, 0, 0.8); /* semi-transparent background */
+      background-color: rgba(0, 0, 0, 0.8);
       justify-content: center;
       align-items: center;
     }
@@ -30,10 +30,97 @@
       max-width: 500px;
       text-align: center;
       border-radius: 8px;
+      animation: modalEntrance 0.5s ease-out;
+    }
+    
+    @keyframes modalEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Intro video container styles */
+    #introVideoContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 20000; /* Above all other content */
+    }
+    
+    #introVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    /* Play button for intro video */
+    #introPlayButton {
+      position: absolute;
+      z-index: 21000;
+      padding: 12px 24px;
+      background: rgba(212,175,55,0.9);
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2em;
+      color: #000;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+    
+    #introPlayButton:hover {
+      transform: scale(1.05);
+      background: rgba(212,175,55,1);
+    }
+    
+    /* Header Buttons Container */
+    #headerButtons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-left: 20px; /* Optional spacing from titles */
+    }
+    
+    /* Watch Intro Again button styling */
+    #watchIntroBtn {
+      margin-top: 5px;
+      padding: 8px 16px;
+      background: rgba(212,175,55,0.9);
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      color: #000;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+    
+    #watchIntroBtn:hover {
+      transform: scale(1.05);
+      background: rgba(212,175,55,1);
     }
   </style>
 </head>
 <body>
+  <!-- Intro Video Container -->
+ <!---- <div id="introVideoContainer">
+    <video id="introVideo" playsinline>
+      <source src="videos/intro.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <button id="introPlayButton">Play Intro</button>
+  </div>--->
+  
   <!-- Optional loading overlay -->
   <div id="loadingOverlay">Loading...</div>
   
@@ -44,8 +131,11 @@
         <h1>Dad's 75th</h1>
         <h1>Deal or No Deal</h1>
       </div>
-      <!-- Full screen toggle button -->
-      <button id="fullScreenBtn" onclick="toggleFullScreen()">Full Screen</button>
+      <!-- Header Buttons Container -->
+      <div id="headerButtons">
+        <button id="fullScreenBtn" onclick="toggleFullScreen()">Full Screen</button>
+        <button id="watchIntroBtn">Watch Intro Again</button>
+      </div>
     </div>
   </header>
 
