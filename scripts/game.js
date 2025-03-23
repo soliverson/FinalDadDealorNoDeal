@@ -58,7 +58,8 @@ function openBriefcase(box) {
 function finalSwap() {
   finalSwapActive = true;
   offerActive = true;
-  // Build final decision modal content.
+  playSound('suspenseMusic');
+
   const finalHTML = `
     <p class="message">Final decision:</p>
     <p class="message">Do you want to keep your personal box or swap it with the last remaining briefcase?</p>

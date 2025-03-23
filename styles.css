@@ -240,6 +240,25 @@ button:active {
   transform: scale(0.98);
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
+
+#skipIntroButton {
+  position: absolute;
+  z-index: 21000;
+  bottom: 20px;
+  padding: 10px 20px;
+  background: rgba(212,175,55,0.9);
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  color: #000;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+}
+#skipIntroButton:hover {
+  transform: scale(1.05);
+  background: rgba(212,175,55,1);
+}
+
 @keyframes pulse {
   0%   { transform: scale(1); }
   50%  { transform: scale(1.05); }
